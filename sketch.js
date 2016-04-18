@@ -1,12 +1,19 @@
+// fix cam z position control with dat-gui
+// fix remove boid function (actually implement it !)
+// remove more boids at a time
+// detect orientation of each boid
+
+
 
 var flock;
+var zpos;
 
 function setup() {
   createCanvas(windowWidth, windowHeight,WEBGL);
 
   flock = new Flock();
   // Add an initial set of boids into the system
-  for (var i = 0; i < 100; i++) {
+  for (var i = 0; i < 15; i++) {
     var b = new Boid(0,0,250);
     flock.addBoid(b);
   }
@@ -20,8 +27,11 @@ function setup() {
 function draw() {
   background(0);
   ambientLight(255, 255, 255);
+  
+  translate(0,0,cc.z_position);
 
-  camControl();
+  rotateY(cc.x_rotation);
+  rotateX(cc.y_rotation);
 
   specularMaterial(250);
   push();
@@ -55,18 +65,13 @@ function draw() {
   box(5,5,5);
   pop();
 
+  push();
   normalMaterial();
   flock.run();
-
+  pop();
 }
 
 
-camControl = function(){
-  translate(0,0,cc.z_postion);
-  console.log(cc.z_position);
-  rotateY(cc.x_rotation);
-  rotateX(cc.y_rotation);
-};
 
 
 // The Nature of Code
@@ -105,7 +110,7 @@ function Boid(x,y,z) {
   this.r = 3.0;
   this.maxspeed = 3;    // Maximum speed
   this.maxforce = 0.05; // Maximum steering force
-  
+ 
 
 }
 
@@ -163,12 +168,16 @@ Boid.prototype.seek = function(target) {
 Boid.prototype.render = function() {
   // Draw a triangle rotated in the direction of velocity
   var theta = this.velocity.heading() + radians(90);
+  //console.log(theta);
   fill(127);
   stroke(200);
   push();
   translate(this.position.x,this.position.y,this.position.z);
   
-  sphere(this.r*3);
+  //sphere(this.r*3);
+  //rotateX(theta);
+  //rotateY(theta-radians(120));
+  cone(this.r*3, this.r*3);
   pop();
 }
 
@@ -268,23 +277,19 @@ Boid.prototype.cohesion = function(boids) {
 
 ////////////////////////////////////////////////////////////////////////
 // GUI
-// we need only three elements : 
-
-// - one button to add a boid, 
-// - and one to remove
 var initGui = function() {
   var f2 = gui.addFolder('Simulation parameters');
-  f2.add(sp, 'separation' ,0,10);
-  f2.add(sp, 'alignement' ,0,10);
-  f2.add(sp, 'cohesion' ,0,110);  
+  f2.add(sp, 'separation' ,-10,10);
+  f2.add(sp, 'alignement' ,-10,10);
+  f2.add(sp, 'cohesion' ,-10,10);  
   f2.add(sp, 'add_boid');
   f2.add(sp, 'remove_boid');  
 
   var f = gui.addFolder('Camera controls');
-  f.add(cc, 'z_position', -500,500);
+  f.add(cc, 'z_position', -800,800);
   f.add(cc, 'x_rotation', -PI/2,PI/2);
   f.add(cc, 'y_rotation', -PI/2,PI/2);
-
+  f.add(cc, 'reset_camera');
 }
 
 var simulationParameters = function(){
@@ -300,4 +305,10 @@ var camControls = function(){
   this.z_position = 0;
   this.x_rotation = 0;
   this.y_rotation = 0;
+
+  this.reset_camera = function (){
+     this.z_position = 0;
+     this.x_rotation = 0;
+     this.y_rotation = 0;
+  }
 }
