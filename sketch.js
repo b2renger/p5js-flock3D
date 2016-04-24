@@ -187,8 +187,8 @@ Boid.prototype.render = function(boids) {
 
   translate(this.position.x,this.position.y,this.position.z);
 
-  rotateY(atan2(-this.velocity.z,this.velocity.x));
-  rotateZ(asin(this.velocity.y/this.velocity.mag()));
+  rotateX(acos(this.velocity.y/this.velocity.mag()));
+  rotateZ(atan2(-this.velocity.x,this.velocity.z));
 
   cone(this.r*3, this.r*5);
   pop();
