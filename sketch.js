@@ -9,7 +9,7 @@ function setup() {
   flock = new Flock();
   // Add an initial set of boids into the system
   for (var i = 0; i < 150; i++) {
-    var b = new Boid(1,1,250);
+    var b = new Boid(1,1,-250);
     flock.addBoid(b);
   }
 
@@ -28,7 +28,12 @@ function draw() {
   rotateY(cc.x_rotation);
   rotateX(cc.y_rotation);
 
-  specularMaterial(250);
+  //specularMaterial(250);
+  //push();
+  //translate(0,0,-400);
+  //box(5,5,5);
+  //pop();
+  
   push();
   translate(-width/2,-height/2,0);
   box(5,5,5);
@@ -105,8 +110,8 @@ function Boid(x,y,z) {
   this.r = 3.0;
   this.maxspeed = 3;    // Maximum speed
   this.maxforce = 0.05; // Maximum steering force
+  this.maxattract = 0.3;
  
-  this.globsteer;
 }
 
 Boid.prototype.run = function(boids) {
@@ -130,9 +135,6 @@ Boid.prototype.flock = function(boids) {
   sep.mult(sp.separation);
   ali.mult(sp.alignement);
   coh.mult(sp.cohesion);
-
-  //this.globsteer = sep.mult(sp.separation)+  ali.mult(sp.alignement)+  coh.mult(sp.cohesion);
-  //console.log(this.globsteer);
   // Add the force vectors to acceleration
   this.applyForce(sep);
   this.applyForce(ali);
@@ -163,6 +165,20 @@ Boid.prototype.seek = function(target) {
   return steer;
 }
 
+Boid.prototype.seekPrio = function(target,force) {
+  var desired = p5.Vector.sub(target,this.position);  // A vector pointing from the location to the target
+  // Normalize desired and scale to maximum speed
+
+  var dist = desired.mag();
+  desired.normalize();
+  
+  desired.mult(force*dist);
+  // Steering = Desired minus Velocity
+  var steer = p5.Vector.sub(desired,this.velocity);
+  steer.limit(this.maxattract);  // Limit to maximum steering force
+  return steer;
+}
+
 Boid.prototype.render = function(boids) {
   // Draw a triangle rotated in the direction of velocity
 
@@ -188,7 +204,37 @@ Boid.prototype.borders = function() {
   if (this.position.y > height/2+this.r) this.position.y = -height/2-this.r;
   if (this.position.z > 0+this.r) this.position.z = -this.r -800;
   if (this.position.z < -800+this.r) this.position.z = -this.r +0;
+  
+  /*
+  var force = 0.2;
+ 
 
+  if (this.position.x < -this.r-width/2) {
+   this.applyForce(this.seekPrio(createVector(1,this.position.y,this.position.z),force));
+   //this.acceleration.add(createVector(force,random(-rnoise,rnoise),random(-rnoise,rnoise)));
+
+
+ }
+  else if (this.position.y < -this.r-height/2) {
+    this.applyForce(this.seekPrio(createVector(this.position.x,1,this.position.z),force));
+    //this.acceleration.add(createVector(random(-rnoise,rnoise),force,random(-rnoise,rnoise)));
+  }
+  else if (this.position.x > width/2 +this.r){
+  this.applyForce(this.seekPrio(createVector(1,this.position.y,this.position.z),force));
+  // this.acceleration.add(createVector(-force,random(-rnoise,rnoise),random(-rnoise,rnoise)));
+ }
+  else if (this.position.y > height/2+this.r) {
+    this.applyForce(this.seekPrio(createVector(this.position.x,1,this.position.z),force));
+    //this.acceleration.add(createVector(random(-rnoise,rnoise),-force,random(-rnoise,rnoise)));
+  }
+  else if (this.position.z > 0+this.r) {
+   this.applyForce(this.seekPrio(createVector(this.position.x,this.position.y,-400),force));
+   // this.acceleration.add(createVector(random(-rnoise,rnoise),random(-rnoise,rnoise),-force));
+  }
+  else if (this.position.z < -1000+this.r) {
+   this.applyForce(this.seekPrio(createVector(this.position.x,this.position.y,-400),force));
+   // this.acceleration.add(createVector(random(-rnoise,rnoise),random(-rnoise,rnoise),force));
+  }*/
  
 }
 
@@ -278,9 +324,9 @@ Boid.prototype.cohesion = function(boids) {
 // GUI
 var initGui = function() {
   var f2 = gui.addFolder('Simulation parameters');
-  f2.add(sp, 'separation' ,-10,10);
-  f2.add(sp, 'alignement' ,-10,10);
-  f2.add(sp, 'cohesion' ,-10,10);  
+  f2.add(sp, 'separation' ,0,10);
+  f2.add(sp, 'alignement' ,0,10);
+  f2.add(sp, 'cohesion' ,0,10);  
   f2.add(sp, 'add_boid');
   f2.add(sp, 'remove_boid');  
   f2.add(sp, 'reset_flock');
@@ -303,7 +349,7 @@ var simulationParameters = function(){
     this.reset_flock = function (){
       flock = new Flock();
       for (var i = 0; i < 150; i++) {
-        var b = new Boid(1,1,250);
+        var b = new Boid(1,1,-400);
         flock.addBoid(b);
       }
     }
